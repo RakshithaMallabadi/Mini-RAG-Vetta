@@ -1,0 +1,4 @@
+Key decisions:
+- Improve document ingestion engine for PDFs
+- Add vector search module for knowledge retrieval
+- Optimize inference time for AI assistant

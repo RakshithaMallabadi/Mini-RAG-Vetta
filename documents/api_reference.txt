@@ -1,0 +1,3 @@
+POST /api/v1/jobs/start
+Starts a new workflow job. Request body must include workflow_id and optional payload.
+Response returns job_id and execution status.
