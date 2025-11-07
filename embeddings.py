@@ -54,7 +54,47 @@ class EmbeddingGenerator:
         
         self.model_name = model_name
         print(f"Loading embedding model: {model_name}...")
-        self.model = SentenceTransformer(model_name)
+        # Workaround for PyTorch meta tensor issue
+        # Set environment variables before importing/loading
+        os.environ.setdefault('PYTORCH_ENABLE_MPS_FALLBACK', '1')
+        os.environ.setdefault('TRANSFORMERS_NO_ADVISORY_WARNINGS', '1')
+        
+        try:
+            import torch
+            # Disable meta device to avoid meta tensor issues
+            # This forces PyTorch to materialize tensors immediately
+            if hasattr(torch, '_C'):
+                # Try to disable meta device usage
+                try:
+                    torch._C._set_print_stack_traces_on_fatal_signal(False)
+                except:
+                    pass
+            
+            # Load model with explicit device and avoid lazy loading
+            device = 'cpu'
+            # Use device_map='cpu' to force CPU and avoid meta tensors
+            self.model = SentenceTransformer(
+                model_name,
+                device=device
+            )
+            # Force model to CPU explicitly after loading
+            if hasattr(self.model, 'to'):
+                self.model = self.model.to(device)
+            # Also move the underlying model if it exists
+            if hasattr(self.model, '_modules'):
+                for module in self.model._modules.values():
+                    if hasattr(module, 'to'):
+                        module.to(device)
+                        
+        except Exception as e:
+            # Fallback: try simple loading
+            print(f"Warning: Error with device specification: {e}")
+            try:
+                self.model = SentenceTransformer(model_name)
+            except Exception as e2:
+                print(f"Error loading model: {e2}")
+                raise
+        
         self.embedding_dim = self.model.get_sentence_embedding_dimension()
         print(f"✓ Model loaded. Embedding dimension: {self.embedding_dim}")
     

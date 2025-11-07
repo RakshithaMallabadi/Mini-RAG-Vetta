@@ -16,11 +16,15 @@ from concurrent.futures import ThreadPoolExecutor
 import sys
 import io
 from contextlib import redirect_stdout, redirect_stderr
+from dotenv import load_dotenv
 
 from data_ingestion import DocumentProcessor
 from embeddings import EmbeddingVectorStore
 from retrieval import RetrievalSystem
 from llm_answering import RAGAnswerSystem
+
+# Load environment variables from .env file
+load_dotenv()
 
 # Thread pool executor for CPU-bound tasks
 executor = ThreadPoolExecutor(max_workers=2)

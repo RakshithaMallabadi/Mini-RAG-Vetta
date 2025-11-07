@@ -6,6 +6,7 @@ Retrieves top-k chunks and generates answers with citations
 import re
 from typing import List, Dict, Optional
 import os
+from dotenv import load_dotenv
 
 try:
     from openai import OpenAI
@@ -13,6 +14,9 @@ except ImportError:
     OpenAI = None
 
 from retrieval import RetrievalSystem
+
+# Load environment variables from .env file
+load_dotenv()
 
 
 class LLMAnswerGenerator:
