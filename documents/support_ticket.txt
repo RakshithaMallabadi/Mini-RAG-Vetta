@@ -1,0 +1,2 @@
+Customer reports workflow failure when processing large CSV uploads.
+Recommendation: increase memory allocation and split processing batches.

@@ -1,72 +1,0 @@
-INFO:     Started server process [8114]
-INFO:     Waiting for application startup.
-INFO:     Application startup complete.
-INFO:     Uvicorn running on http://127.0.0.1:8000 (Press CTRL+C to quit)
-Starting Mini RAG 2 API...
-Pre-loading embedding model...
-Loading embedding model: all-MiniLM-L6-v2...
-Loading embedding model: all-MiniLM-L6-v2...
-⚠ Could not pre-load embedding model: Cannot copy out of meta tensor; no data! Please use torch.nn.Module.to_empty() instead of torch.nn.Module.to() when moving module from meta to a different device.
-✓ Model loaded. Embedding dimension: 384
-✓ Loaded index from faiss_index.bin
-✓ Loaded metadata from faiss_metadata.pkl
-  Total vectors: 2
-✓ Vector store loaded successfully
-INFO:     127.0.0.1:53139 - "GET /health HTTP/1.1" 200 OK
-INFO:     127.0.0.1:53143 - "GET / HTTP/1.1" 200 OK
-INFO:     127.0.0.1:53147 - "GET /stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:53152 - "POST /search HTTP/1.1" 200 OK
-INFO:     127.0.0.1:53157 - "POST /search HTTP/1.1" 200 OK
-INFO:     127.0.0.1:53167 - "GET /docs HTTP/1.1" 200 OK
-INFO:     127.0.0.1:53167 - "GET /openapi.json HTTP/1.1" 200 OK
-INFO:     127.0.0.1:53167 - "GET /health HTTP/1.1" 200 OK
-Loading embedding model: all-MiniLM-L6-v2...
-✓ Model loaded. Embedding dimension: 384
-Generating embeddings for 2 texts...
-Batches:   0%|          | 0/1 [00:00<?, ?it/s]Batches: 100%|██████████| 1/1 [00:00<00:00,  1.10it/s]Batches: 100%|██████████| 1/1 [00:00<00:00,  1.10it/s]
-✓ Generated 2 embeddings
-✓ Added 2 vectors to FAISS index. Total vectors: 2
-✓ Saved index to faiss_index.bin
-✓ Saved metadata to faiss_metadata.pkl
-Loading embedding model: all-MiniLM-L6-v2...
-✓ Model loaded. Embedding dimension: 384
-✓ Loaded index from faiss_index.bin
-✓ Loaded metadata from faiss_metadata.pkl
-  Total vectors: 2
-INFO:     127.0.0.1:53167 - "POST /process HTTP/1.1" 200 OK
-INFO:     127.0.0.1:53470 - "GET /docs HTTP/1.1" 200 OK
-INFO:     127.0.0.1:53470 - "GET /openapi.json HTTP/1.1" 200 OK
-INFO:     127.0.0.1:53470 - "GET /docs HTTP/1.1" 200 OK
-INFO:     127.0.0.1:53470 - "GET /openapi.json HTTP/1.1" 200 OK
-Loading embedding model: all-MiniLM-L6-v2...
-✓ Model loaded. Embedding dimension: 384
-Generating embeddings for 2 texts...
-Batches:   0%|          | 0/1 [00:00<?, ?it/s]Batches: 100%|██████████| 1/1 [00:00<00:00, 101.08it/s]
-✓ Generated 2 embeddings
-✓ Added 2 vectors to FAISS index. Total vectors: 2
-✓ Saved index to faiss_index.bin
-✓ Saved metadata to faiss_metadata.pkl
-Loading embedding model: all-MiniLM-L6-v2...
-✓ Model loaded. Embedding dimension: 384
-✓ Loaded index from faiss_index.bin
-✓ Loaded metadata from faiss_metadata.pkl
-  Total vectors: 2
-INFO:     127.0.0.1:53470 - "POST /process HTTP/1.1" 200 OK
-INFO:     127.0.0.1:53470 - "GET /docs HTTP/1.1" 200 OK
-INFO:     127.0.0.1:53470 - "GET /openapi.json HTTP/1.1" 200 OK
-Loading embedding model: all-MiniLM-L6-v2...
-✓ Model loaded. Embedding dimension: 384
-Generating embeddings for 2 texts...
-Batches:   0%|          | 0/1 [00:00<?, ?it/s]Batches: 100%|██████████| 1/1 [00:00<00:00, 122.40it/s]
-✓ Generated 2 embeddings
-✓ Added 2 vectors to FAISS index. Total vectors: 2
-✓ Saved index to faiss_index.bin
-✓ Saved metadata to faiss_metadata.pkl
-Loading embedding model: all-MiniLM-L6-v2...
-✓ Model loaded. Embedding dimension: 384
-✓ Loaded index from faiss_index.bin
-✓ Loaded metadata from faiss_metadata.pkl
-  Total vectors: 2
-INFO:     127.0.0.1:53470 - "POST /process HTTP/1.1" 200 OK
-INFO:     127.0.0.1:53470 - "GET /stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:53470 - "POST /search HTTP/1.1" 200 OK

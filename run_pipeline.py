@@ -3,8 +3,8 @@ Complete RAG Pipeline Runner
 Integrates data ingestion, embeddings, and vector store
 """
 
-from data_ingestion import DocumentProcessor
-from embeddings import EmbeddingVectorStore
+from src.core.ingestion import DocumentProcessor
+from src.core.embeddings import EmbeddingVectorStore
 import os
 
 
@@ -154,7 +154,7 @@ def main():
         print("=" * 70)
         print("Example: python run_pipeline.py ./documents/ 'your query here'")
         print("\nOr use the vector store programmatically:")
-        print("  from embeddings import EmbeddingVectorStore")
+        print("  from src.core.embeddings import EmbeddingVectorStore")
         print("  vector_store = EmbeddingVectorStore()")
         print("  vector_store.load('faiss_index.bin', 'faiss_metadata.pkl')")
         print("  results = vector_store.search('your query', k=5)")

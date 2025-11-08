@@ -1,0 +1,4 @@
+v2.1 Release Features:
+- Hybrid retrieval (BM25 + embeddings)
+- RAG assistant with context citation
+- Streamlined pipeline builder

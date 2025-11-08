@@ -3,7 +3,7 @@ Example usage of the data ingestion module
 """
 
 from collections import defaultdict
-from data_ingestion import DocumentProcessor
+from src.core.ingestion import DocumentProcessor
 
 def example_single_file():
     """Example: Process a single document"""

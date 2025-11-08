@@ -1,0 +1,4 @@
+Q: Does AcmeTech support cloud deployment?
+A: Yes, deployments are supported on AWS, Azure, and GCP.
+Q: Does the platform support Python integrations?
+A: Yes, via SDK and REST APIs.

@@ -1,0 +1,2 @@
+To reduce latency, explore model quantization and embedding caching.
+Implement request batching for high-throughput inference workloads.

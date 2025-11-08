@@ -1,0 +1,2 @@
+The AcmeTech Automation Engine supports the creation of custom workflows, real-time alerts, and data pipelines.
+Key components include: Scheduler, Event Trigger, Data Transformer, and Notification Module.

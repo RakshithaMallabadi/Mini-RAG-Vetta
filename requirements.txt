@@ -26,6 +26,9 @@ python-multipart>=0.0.6
 # Retrieval
 rank-bm25>=0.2.2
 
+# Reranking
+FlagEmbedding>=1.2.0
+
 # LLM
 openai>=1.0.0
 

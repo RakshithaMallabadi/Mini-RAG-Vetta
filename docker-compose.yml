@@ -1,0 +1,32 @@
+services:
+  mini-rag-api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: mini-rag-2-api
+    ports:
+      - "8000:8000"
+    environment:
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+      - PYTHONUNBUFFERED=1
+    volumes:
+      # Mount documents directory for document processing
+      - ./documents:/app/documents
+      # Mount data directory for persistent vector store
+      - ./data:/app/data
+      # Optional: Mount .env file (if you prefer file-based config)
+      # - ./.env:/app/.env
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - mini-rag-network
+
+networks:
+  mini-rag-network:
+    driver: bridge
+

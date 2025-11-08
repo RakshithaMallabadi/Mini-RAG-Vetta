@@ -1,0 +1,2 @@
+As a data engineer, I want to schedule automated ETL tasks so that I can refresh dashboards daily.
+Acceptance criteria: cron support, retry logic, job logs.
