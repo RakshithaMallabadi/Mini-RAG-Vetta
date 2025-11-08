@@ -23,7 +23,8 @@ class AnswerService:
         use_reranking: bool = None,
         rerank_top_k: int = None
     ) -> Dict:
-        """Generate answer using RAG with optional reranking"""
+        """Generate answer using RAG"""
+        # TODO: add retry logic for API failures
         rag_system = self.vector_store_service.get_rag_system(model=model)
         if rag_system is None:
             raise ValueError("RAG system not available. Check OPENAI_API_KEY.")
@@ -44,16 +45,16 @@ class AnswerService:
             rerank_top_k=rerank_top_k
         )
         
-        # Format chunks for LLM (convert to expected format)
+        # format chunks for LLM
         formatted_chunks = []
         for chunk in retrieved_chunks:
             formatted_chunks.append({
                 'text': chunk['text'],
                 'metadata': chunk.get('metadata', {}),
-                'score': chunk.get('score', 0.0')
+                'score': chunk.get('score', 0.0)
             })
         
-        # Generate answer with retrieved chunks
+        # lazy import to avoid circular deps
         from src.core.llm import LLMAnswerGenerator
         from src.config import get_settings
         

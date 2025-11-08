@@ -44,7 +44,7 @@ class Settings:
     DEFAULT_MAX_TOKENS = 500
     
     # Reranking Settings
-    RERANKING_ENABLED = os.getenv("RERANKING_ENABLED", "true").lower() == "true"
+    RERANKING_ENABLED = os.getenv("RERANKING_ENABLED", "false").lower() == "true"
     RERANKER_MODEL = os.getenv("RERANKER_MODEL", "BAAI/bge-reranker-base")
     DEFAULT_RERANK_TOP_K = None  # None = rerank all retrieved documents
     

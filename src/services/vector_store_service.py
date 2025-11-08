@@ -18,7 +18,7 @@ class VectorStoreService:
         self.rag_system: Optional[RAGAnswerSystem] = None
     
     def load_vector_store(self) -> bool:
-        """Load the vector store if it exists"""
+        """Load vector store if exists"""
         if self.vector_store is None:
             index_path = self.settings.INDEX_PATH
             metadata_path = self.settings.METADATA_PATH
@@ -28,16 +28,16 @@ class VectorStoreService:
                     self.vector_store = EmbeddingVectorStore()
                     self.vector_store.load(str(index_path), str(metadata_path))
                     
-                    # Initialize retrieval system
+                    # init retrieval system
                     self.retrieval_system = RetrievalSystem(self.vector_store)
                     
-                    # Load chunks for BM25
+                    # load chunks for BM25
                     if metadata_path.exists():
                         with open(metadata_path, 'rb') as f:
                             chunks = pickle.load(f)
                         self.retrieval_system.update_chunks(chunks)
                     
-                    # Initialize RAG system if API key is available
+                    # init RAG if API key available
                     if self.settings.OPENAI_API_KEY:
                         try:
                             self.rag_system = RAGAnswerSystem(
@@ -71,17 +71,16 @@ class VectorStoreService:
         return self.retrieval_system
     
     def get_rag_system(self, model: Optional[str] = None) -> Optional[RAGAnswerSystem]:
-        """Get the RAG system instance"""
+        """Get RAG system instance"""
         self.load_vector_store()
         
-        # Normalize model parameter - handle None, empty string, or invalid values
+        # normalize model param (handle swagger UI sending 'string')
         if not model or model.strip() == '' or model == 'string':
             model = self.settings.DEFAULT_LLM_MODEL
         else:
             model = model.strip()
         
-        # Check if we need to create or recreate RAG system
-        # If model changed or system doesn't exist, create/recreate it
+        # create/recreate RAG system if needed
         if self.settings.OPENAI_API_KEY:
             if self.retrieval_system is None:
                 self.retrieval_system = RetrievalSystem(self.vector_store)

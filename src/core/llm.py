@@ -51,17 +51,8 @@ class LLMAnswerGenerator:
         self.client = OpenAI(api_key=self.api_key, base_url=base_url)
     
     def _create_prompt(self, query: str, context_chunks: List[Dict]) -> str:
-        """
-        Create prompt with retrieved context and citation instructions
-        
-        Args:
-            query: User question
-            context_chunks: List of retrieved chunks with metadata
-            
-        Returns:
-            Formatted prompt string
-        """
-        # Format context chunks with citations
+        """Create prompt with context"""
+        # format chunks with citation numbers
         context_text = ""
         for i, chunk in enumerate(context_chunks, 1):
             source_file = chunk['metadata'].get('source_file', 'Unknown')
@@ -94,21 +85,7 @@ Answer:"""
                        context_chunks: List[Dict],
                        temperature: float = 0.7,
                        max_tokens: int = 500) -> Dict:
-        """
-        Generate answer with citations
-        
-        Args:
-            query: User question
-            context_chunks: List of retrieved chunks
-            temperature: Sampling temperature (default: 0.7)
-            max_tokens: Maximum tokens in response (default: 500)
-            
-        Returns:
-            Dictionary containing:
-            - answer: Generated answer text
-            - citations: List of citation numbers used
-            - sources: List of source file names cited
-        """
+        """Generate answer with citations"""
         if not context_chunks:
             return {
                 'answer': "I cannot find relevant information to answer this question.",
@@ -116,11 +93,10 @@ Answer:"""
                 'sources': []
             }
         
-        # Create prompt
         prompt = self._create_prompt(query, context_chunks)
         
         try:
-            # Call LLM
+            # call OpenAI API
             response = self.client.chat.completions.create(
                 model=self.model,
                 messages=[
@@ -133,10 +109,10 @@ Answer:"""
             
             answer = response.choices[0].message.content.strip()
             
-            # Extract citations from answer
+            # extract citation numbers from answer text
             citations = self._extract_citations(answer)
             
-            # Get source files for cited chunks
+            # get unique source files
             sources = []
             for citation_num in citations:
                 if 1 <= citation_num <= len(context_chunks):
@@ -190,22 +166,14 @@ Answer:"""
 
 
 class RAGAnswerSystem:
-    """Complete RAG system: retrieval + LLM answering"""
+    """RAG system: retrieval + LLM"""
     
     def __init__(self, 
                  retrieval_system: RetrievalSystem,
                  api_key: Optional[str] = None,
                  model: str = "gpt-3.5-turbo",
                  base_url: Optional[str] = None):
-        """
-        Initialize RAG answer system
-        
-        Args:
-            retrieval_system: RetrievalSystem instance
-            api_key: OpenAI API key
-            model: LLM model name
-            base_url: Custom API base URL
-        """
+        """Initialize RAG system"""
         self.retrieval_system = retrieval_system
         self.llm_generator = LLMAnswerGenerator(
             api_key=api_key,
@@ -221,26 +189,8 @@ class RAGAnswerSystem:
                bm25_weight: float = 0.3,
                temperature: float = 0.7,
                max_tokens: int = 500) -> Dict:
-        """
-        Answer a question using RAG pipeline
-        
-        Args:
-            query: User question
-            k: Number of chunks to retrieve (default: 5)
-            mode: Retrieval mode - "semantic", "bm25", or "hybrid" (default: "semantic")
-            semantic_weight: Weight for semantic search in hybrid mode
-            bm25_weight: Weight for BM25 in hybrid mode
-            temperature: LLM temperature
-            max_tokens: Maximum tokens in response
-            
-        Returns:
-            Dictionary containing:
-            - answer: Generated answer
-            - citations: List of citation numbers
-            - sources: List of source files
-            - context_chunks: Retrieved chunks used
-        """
-        # Retrieve relevant chunks
+        """Answer question using RAG"""
+        # retrieve chunks
         retrieved_chunks = self.retrieval_system.search(
             query=query,
             k=k,
@@ -249,7 +199,7 @@ class RAGAnswerSystem:
             bm25_weight=bm25_weight
         )
         
-        # Generate answer with citations
+        # generate answer
         result = self.llm_generator.generate_answer(
             query=query,
             context_chunks=retrieved_chunks,
@@ -263,7 +213,7 @@ class RAGAnswerSystem:
 def main():
     """Example usage"""
     import sys
-    from embeddings import EmbeddingVectorStore
+    from src.core.embeddings import EmbeddingVectorStore
     
     if len(sys.argv) < 2:
         print("Usage: python llm_answering.py <question>")

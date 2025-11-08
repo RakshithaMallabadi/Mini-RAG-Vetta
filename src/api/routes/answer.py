@@ -16,29 +16,29 @@ executor = ThreadPoolExecutor(max_workers=2)
 
 @router.post("/answer", response_model=AnswerResponse)
 async def answer_question(request: AnswerRequest):
-    """Answer a question using RAG (Retrieval-Augmented Generation)"""
+    """Answer question using RAG"""
     vector_store_service = get_vector_store_service()
     if not vector_store_service.load_vector_store():
         raise HTTPException(
             status_code=404,
-            detail="Vector store not found. Process documents first using /process or /upload"
+            detail="Vector store not found. Process documents first."
         )
     
     settings = get_settings()
     if not settings.OPENAI_API_KEY:
         raise HTTPException(
             status_code=500,
-            detail="OPENAI_API_KEY environment variable not set. Please set it to use the answer endpoint."
+            detail="OPENAI_API_KEY not set"
         )
     
-    # Validate mode
+    # validate mode
     if request.mode not in ["semantic", "bm25", "hybrid"]:
         raise HTTPException(
             status_code=400,
             detail="Invalid mode. Use 'semantic', 'bm25', or 'hybrid'"
         )
     
-    # Validate weights for hybrid mode
+    # check weights for hybrid
     if request.mode == "hybrid":
         if abs(request.semantic_weight + request.bm25_weight - 1.0) > 0.01:
             raise HTTPException(
@@ -50,13 +50,13 @@ async def answer_question(request: AnswerRequest):
         answer_service = AnswerService()
         loop = asyncio.get_event_loop()
         
-        # Normalize model parameter - ensure None or valid string
+        # handle empty model string (swagger UI sends 'string' sometimes)
         model = request.model
         if model and (model.strip() == '' or model.strip() == 'string'):
             model = None
         
         def generate_answer():
-            """Generate answer in executor"""
+            """run in executor to avoid blocking"""
             try:
                 return answer_service.generate_answer(
                     question=request.question,
@@ -71,7 +71,10 @@ async def answer_question(request: AnswerRequest):
                     rerank_top_k=request.rerank_top_k
                 )
             except Exception as e:
-                raise Exception(f"Error generating answer: {str(e)}")
+                import traceback
+                error_msg = str(e) if str(e) else repr(e)
+                traceback.print_exc()
+                raise Exception(f"Error generating answer: {error_msg}")
         
         result = await loop.run_in_executor(executor, generate_answer)
         

@@ -35,36 +35,29 @@ class DocumentProcessor:
     """Processes documents: extracts, cleans, and chunks text"""
     
     def __init__(self, encoding_model: str = "cl100k_base", chunk_size: int = 512, chunk_overlap: int = 50):
-        """
-        Initialize the document processor
-        
-        Args:
-            encoding_model: Tokenizer model name (default: cl100k_base for GPT models)
-            chunk_size: Number of tokens per chunk
-            chunk_overlap: Number of overlapping tokens between chunks
-        """
+        """Initialize processor"""
         self.encoding_model = encoding_model
         self.chunk_size = chunk_size
         self.chunk_overlap = chunk_overlap
         
-        # Initialize tokenizer
+        # init tokenizer
         try:
             self.tokenizer = tiktoken.get_encoding(encoding_model)
         except Exception as e:
             raise ValueError(f"Failed to initialize tokenizer: {e}")
         
-        # Initialize HTML converter
+        # HTML converter setup
         if html2text:
             self.html_converter = html2text.HTML2Text()
             self.html_converter.ignore_links = True
             self.html_converter.ignore_images = True
     
     def detect_encoding(self, file_path: str) -> str:
-        """Detect file encoding"""
+        """Detect encoding - fallback to utf-8"""
         with open(file_path, 'rb') as f:
             raw_data = f.read()
             result = chardet.detect(raw_data)
-            return result.get('encoding', 'utf-8')
+            return result.get('encoding', 'utf-8')  # default to utf-8
     
     def extract_text_from_pdf(self, file_path: str) -> str:
         """Extract text from PDF file"""

@@ -13,11 +13,10 @@ def create_app() -> FastAPI:
     )
     
     # Register routes
-    from src.api.routes import health, documents, search, answer
+    from src.api.routes import health, documents, answer
     
     app.include_router(health.router, tags=["Health"])
     app.include_router(documents.router, tags=["Documents"])
-    app.include_router(search.router, tags=["Search"])
     app.include_router(answer.router, tags=["Answer"])
     
     # Root endpoint
@@ -33,7 +32,6 @@ def create_app() -> FastAPI:
                 "stats": "/stats",
                 "process_documents": "/process",
                 "upload_document": "/upload",
-                "search": "/search",
                 "answer": "/answer",
                 "docs": "/docs"
             }

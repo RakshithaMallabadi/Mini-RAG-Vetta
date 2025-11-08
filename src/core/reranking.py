@@ -16,16 +16,7 @@ class BGEReranker:
     """BGE-reranker for reranking search results"""
     
     def __init__(self, model_name: str = "BAAI/bge-reranker-base"):
-        """
-        Initialize BGE reranker
-        
-        Args:
-            model_name: HuggingFace model name for BGE reranker
-                       Options:
-                       - "BAAI/bge-reranker-base" (default, ~110M params)
-                       - "BAAI/bge-reranker-large" (~330M params, better but slower)
-                       - "BAAI/bge-reranker-v2-m3" (multilingual)
-        """
+        """Initialize reranker"""
         if FlagReranker is None:
             raise ImportError(
                 "FlagEmbedding is required for reranking. "
@@ -37,37 +28,21 @@ class BGEReranker:
         self._load_model()
     
     def _load_model(self):
-        """Lazy load the reranker model"""
+        """Lazy load model"""
         if self.reranker is None:
             try:
                 print(f"Loading BGE reranker model: {self.model_name}...")
+                # FIXME: fp16 causes issues on some systems, keeping it False for now
                 self.reranker = FlagReranker(self.model_name, use_fp16=False)
                 print(f"✓ BGE reranker loaded successfully")
             except Exception as e:
-                raise RuntimeError(
-                    f"Failed to load BGE reranker model {self.model_name}: {e}"
-                )
+                raise RuntimeError(f"Failed to load BGE reranker model {self.model_name}: {e}")
     
     def rerank(self, 
                query: str, 
                documents: List[Dict], 
                top_k: Optional[int] = None) -> List[Dict]:
-        """
-        Rerank documents based on query relevance
-        
-        Args:
-            query: Query text string
-            documents: List of document dictionaries with 'text' field
-                      Each dict should have at least:
-                      - 'text': Document text
-                      - 'score': Original retrieval score (optional)
-                      - 'metadata': Metadata dict (optional)
-            top_k: Number of top results to return (None = return all)
-            
-        Returns:
-            List of reranked documents with updated 'score' field
-            Documents are sorted by relevance (highest first)
-        """
+        """Rerank documents by relevance"""
         if not documents:
             return []
         

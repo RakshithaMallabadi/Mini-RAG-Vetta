@@ -40,9 +40,11 @@ Thumbs.db
 server.log
 *.pid
 
-# Vector store (optional - uncomment if you don't want to commit these)
-# faiss_index.bin
-# faiss_metadata.pkl
+# Vector store files (generated, can be regenerated)
+faiss_index.bin
+faiss_metadata.pkl
+*.bin
+*.pkl
 
 # Data directory (for Docker volumes)
 data/

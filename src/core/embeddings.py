@@ -54,40 +54,32 @@ class EmbeddingGenerator:
         
         self.model_name = model_name
         print(f"Loading embedding model: {model_name}...")
-        # Workaround for PyTorch meta tensor issue
-        # Set environment variables before importing/loading
+        # HACK: workaround for PyTorch meta tensor bug - had issues on M1 Mac
         os.environ.setdefault('PYTORCH_ENABLE_MPS_FALLBACK', '1')
         os.environ.setdefault('TRANSFORMERS_NO_ADVISORY_WARNINGS', '1')
         
         try:
             import torch
-            # Disable meta device to avoid meta tensor issues
-            # This forces PyTorch to materialize tensors immediately
+            # trying to avoid meta tensor issues
             if hasattr(torch, '_C'):
-                # Try to disable meta device usage
                 try:
                     torch._C._set_print_stack_traces_on_fatal_signal(False)
                 except:
-                    pass
+                    pass  # doesn't always work but worth trying
             
-            # Load model with explicit device and avoid lazy loading
-            device = 'cpu'
-            # Use device_map='cpu' to force CPU and avoid meta tensors
-            self.model = SentenceTransformer(
-                model_name,
-                device=device
-            )
-            # Force model to CPU explicitly after loading
+            device = 'cpu'  # force CPU to avoid GPU issues
+            self.model = SentenceTransformer(model_name, device=device)
+            
+            # make sure it's on CPU (sometimes doesn't stick)
             if hasattr(self.model, 'to'):
                 self.model = self.model.to(device)
-            # Also move the underlying model if it exists
             if hasattr(self.model, '_modules'):
                 for module in self.model._modules.values():
                     if hasattr(module, 'to'):
                         module.to(device)
                         
         except Exception as e:
-            # Fallback: try simple loading
+            # fallback if device stuff fails
             print(f"Warning: Error with device specification: {e}")
             try:
                 self.model = SentenceTransformer(model_name)
@@ -99,41 +91,24 @@ class EmbeddingGenerator:
         print(f"✓ Model loaded. Embedding dimension: {self.embedding_dim}")
     
     def generate_embeddings(self, texts: List[str], batch_size: int = 32, show_progress: bool = True) -> np.ndarray:
-        """
-        Generate embeddings for a list of texts
-        
-        Args:
-            texts: List of text strings to embed
-            batch_size: Batch size for encoding
-            show_progress: Whether to show progress bar
-            
-        Returns:
-            numpy array of shape (n_texts, embedding_dim) containing embeddings
-        """
+        """Generate embeddings for texts"""
         if not texts:
             return np.array([])
         
         print(f"Generating embeddings for {len(texts)} texts...")
+        # TODO: maybe add caching here for repeated texts?
         embeddings = self.model.encode(
             texts,
             batch_size=batch_size,
             show_progress_bar=show_progress,
             convert_to_numpy=True,
-            normalize_embeddings=True  # Normalize for cosine similarity
+            normalize_embeddings=True  # needed for cosine similarity
         )
         print(f"✓ Generated {len(embeddings)} embeddings")
         return embeddings
     
     def generate_embedding(self, text: str) -> np.ndarray:
-        """
-        Generate embedding for a single text
-        
-        Args:
-            text: Single text string to embed
-            
-        Returns:
-            numpy array of shape (embedding_dim,) containing the embedding
-        """
+        """Single text embedding"""
         embedding = self.model.encode(
             [text],
             convert_to_numpy=True,
@@ -181,99 +156,66 @@ class FAISSVectorStore:
         self.is_trained = False
     
     def add_vectors(self, embeddings: np.ndarray, metadata: List[Dict]) -> None:
-        """
-        Add vectors and their metadata to the index
-        
-        Args:
-            embeddings: numpy array of shape (n_vectors, embedding_dim)
-            metadata: List of metadata dictionaries, one per vector
-        """
+        """Add vectors to index"""
         if len(embeddings) != len(metadata):
             raise ValueError(f"Mismatch: {len(embeddings)} embeddings but {len(metadata)} metadata entries")
         
-        # Ensure embeddings are float32 and normalized
+        # normalize for cosine similarity
         embeddings = embeddings.astype('float32')
-        
-        # Normalize embeddings for cosine similarity
         faiss.normalize_L2(embeddings)
         
-        # Train index if needed (for IVF)
+        # train if IVF index
         if self.index_type == "ivf" and not self.is_trained:
             print("Training FAISS index...")
             self.index.train(embeddings)
             self.is_trained = True
         
-        # Add vectors to index
         self.index.add(embeddings)
-        
-        # Store metadata
         self.metadata.extend(metadata)
         
         print(f"✓ Added {len(embeddings)} vectors to FAISS index. Total vectors: {self.index.ntotal}")
     
     def search(self, query_embedding: np.ndarray, k: int = 5) -> Tuple[np.ndarray, np.ndarray, List[Dict]]:
-        """
-        Search for similar vectors
-        
-        Args:
-            query_embedding: Query embedding vector of shape (embedding_dim,)
-            k: Number of nearest neighbors to return
-            
-        Returns:
-            Tuple of (distances, indices, metadata_list)
-            - distances: Similarity scores (higher is more similar for cosine)
-            - indices: Indices of similar vectors
-            - metadata_list: Metadata for the retrieved vectors
-        """
+        """Search for similar vectors"""
         if self.index.ntotal == 0:
             return np.array([]), np.array([]), []
+        
+        # Ensure k is at least 1 (FAISS requires k > 0)
+        k = max(1, k)
+        k = min(k, self.index.ntotal)
         
         # Ensure query is float32 and normalized
         query_embedding = query_embedding.astype('float32').reshape(1, -1)
         faiss.normalize_L2(query_embedding)
         
         # Search
-        distances, indices = self.index.search(query_embedding, min(k, self.index.ntotal))
+        distances, indices = self.index.search(query_embedding, k)
         
         # Get metadata for retrieved vectors
-        metadata_list = [self.metadata[idx] for idx in indices[0]]
+        # Filter out invalid indices (-1 means no result found by FAISS)
+        valid_indices = [idx for idx in indices[0] if idx >= 0 and idx < len(self.metadata)]
+        metadata_list = [self.metadata[idx] for idx in valid_indices]
         
-        return distances[0], indices[0], metadata_list
+        # Filter distances to match valid indices
+        valid_distances = distances[0][:len(valid_indices)]
+        valid_indices_array = np.array(valid_indices)
+        
+        return valid_distances, valid_indices_array, metadata_list
     
     def save(self, index_path: str, metadata_path: str) -> None:
-        """
-        Save the FAISS index and metadata to disk
-        
-        Args:
-            index_path: Path to save the FAISS index
-            metadata_path: Path to save the metadata
-        """
-        # Save FAISS index
+        """Save index and metadata"""
         faiss.write_index(self.index, index_path)
-        
-        # Save metadata
         with open(metadata_path, 'wb') as f:
             pickle.dump(self.metadata, f)
-        
         print(f"✓ Saved index to {index_path}")
         print(f"✓ Saved metadata to {metadata_path}")
     
     def load(self, index_path: str, metadata_path: str) -> None:
-        """
-        Load the FAISS index and metadata from disk
-        
-        Args:
-            index_path: Path to the FAISS index file
-            metadata_path: Path to the metadata file
-        """
-        # Load FAISS index
+        """Load index and metadata"""
         self.index = faiss.read_index(index_path)
-        
-        # Load metadata
         with open(metadata_path, 'rb') as f:
             self.metadata = pickle.load(f)
-        
-        self.is_trained = True  # Loaded index is already trained
+        self.is_trained = True  # already trained
         print(f"✓ Loaded index from {index_path}")
         print(f"✓ Loaded metadata from {metadata_path}")
         print(f"  Total vectors: {self.index.ntotal}")
@@ -314,24 +256,15 @@ class EmbeddingVectorStore:
             self.vector_store.load(index_path, metadata_path)
     
     def add_chunks(self, chunks: List[Dict]) -> None:
-        """
-        Add document chunks to the vector store
-        
-        Args:
-            chunks: List of chunk dictionaries from DocumentProcessor
-                   Each chunk should have at least a 'text' field
-        """
+        """Add chunks to vector store"""
         if not chunks:
             print("No chunks to add")
             return
         
-        # Extract texts
         texts = [chunk['text'] for chunk in chunks]
-        
-        # Generate embeddings
         embeddings = self.embedding_generator.generate_embeddings(texts)
         
-        # Prepare metadata (preserve all chunk information)
+        # prepare metadata
         metadata = []
         for chunk in chunks:
             metadata.append({
@@ -342,30 +275,14 @@ class EmbeddingVectorStore:
                 'tokens': chunk.get('tokens', 0)
             })
         
-        # Add to vector store
         self.vector_store.add_vectors(embeddings, metadata)
     
     def search(self, query: str, k: int = 5) -> List[Dict]:
-        """
-        Search for similar chunks
-        
-        Args:
-            query: Query text string
-            k: Number of results to return
-            
-        Returns:
-            List of dictionaries containing:
-            - text: Chunk text
-            - score: Similarity score
-            - metadata: Original chunk metadata
-        """
-        # Generate query embedding
+        """Search for similar chunks"""
         query_embedding = self.embedding_generator.generate_embedding(query)
-        
-        # Search
         distances, indices, metadata_list = self.vector_store.search(query_embedding, k=k)
         
-        # Format results
+        # format results
         results = []
         for i, (distance, meta) in enumerate(zip(distances, metadata_list)):
             results.append({
@@ -397,7 +314,7 @@ class EmbeddingVectorStore:
 def main():
     """Example usage"""
     import sys
-    from data_ingestion import DocumentProcessor
+    from src.core.ingestion import DocumentProcessor
     
     if len(sys.argv) < 2:
         print("Usage: python embeddings.py <documents_directory>")

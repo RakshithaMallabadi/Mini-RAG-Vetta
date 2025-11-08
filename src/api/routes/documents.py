@@ -25,7 +25,8 @@ async def process_documents(
     embedding_model: str = Form("all-MiniLM-L6-v2"),
     index_type: str = Form("flat")
 ):
-    """Process all documents in the documents directory"""
+    """Process all documents"""
+    # TODO: add progress tracking for large document sets
     settings = get_settings()
     document_service = DocumentService()
     vector_store_service = get_vector_store_service()
@@ -40,7 +41,7 @@ async def process_documents(
         loop = asyncio.get_event_loop()
         
         def process_docs():
-            """Process documents in a separate thread"""
+            """run in executor"""
             f = io.StringIO()
             try:
                 with redirect_stdout(f), redirect_stderr(f):

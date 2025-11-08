@@ -18,25 +18,17 @@ from src.config import get_settings
 
 
 def tokenize(text: str) -> List[str]:
-    """
-    Simple tokenizer for BM25
-    Converts text to lowercase and splits on whitespace and punctuation
-    """
-    # Convert to lowercase and split on non-word characters
+    """Simple tokenizer - lowercase and split on words"""
+    # basic tokenization for BM25
     tokens = re.findall(r'\b\w+\b', text.lower())
     return tokens
 
 
 class BM25Retriever:
-    """BM25-based keyword retrieval"""
+    """BM25 keyword search"""
     
     def __init__(self, chunks: List[Dict]):
-        """
-        Initialize BM25 retriever with document chunks
-        
-        Args:
-            chunks: List of chunk dictionaries with 'text' field
-        """
+        """Initialize with chunks"""
         if BM25Okapi is None:
             raise ImportError(
                 "rank-bm25 is required. Install it with: pip install rank-bm25"
@@ -45,42 +37,22 @@ class BM25Retriever:
         self.chunks = chunks
         self.texts = [chunk['text'] for chunk in chunks]
         
-        # Tokenize all documents
+        # tokenize docs for BM25
         tokenized_docs = [tokenize(text) for text in self.texts]
-        
-        # Initialize BM25
         self.bm25 = BM25Okapi(tokenized_docs)
     
     def search(self, query: str, k: int = 5) -> List[Dict]:
-        """
-        Search using BM25
-        
-        Args:
-            query: Query text string
-            k: Number of results to return
-            
-        Returns:
-            List of dictionaries containing:
-            - text: Chunk text
-            - score: BM25 score
-            - metadata: Original chunk metadata
-        """
-        # Tokenize query
+        """BM25 search"""
         query_tokens = tokenize(query)
-        
         if not query_tokens:
             return []
         
-        # Get BM25 scores
         scores = self.bm25.get_scores(query_tokens)
-        
-        # Get top k results
         top_indices = np.argsort(scores)[::-1][:k]
         
-        # Format results
         results = []
         for idx in top_indices:
-            if scores[idx] > 0:  # Only include results with positive scores
+            if scores[idx] > 0:  # skip zero scores
                 results.append({
                     'text': self.chunks[idx]['text'],
                     'score': float(scores[idx]),
@@ -285,38 +257,25 @@ class RetrievalSystem:
                bm25_weight: float = 0.3,
                use_reranking: Optional[bool] = None,
                rerank_top_k: Optional[int] = None) -> List[Dict]:
-        """
-        Search with different retrieval modes and optional reranking
+        """Search with different modes"""
+        k = max(1, k)  # need at least 1
         
-        Args:
-            query: Query text string
-            k: Number of results to return
-            mode: Retrieval mode - "semantic", "bm25", or "hybrid" (default: "semantic")
-            semantic_weight: Weight for semantic search in hybrid mode (default: 0.7)
-            bm25_weight: Weight for BM25 in hybrid mode (default: 0.3)
-            use_reranking: Whether to use reranking (None = use system default)
-            rerank_top_k: Number of documents to retrieve before reranking (None = k * 2)
-            
-        Returns:
-            List of search results (reranked if reranking is enabled)
-        """
-        # Determine if reranking should be used
+        # check reranking
         should_rerank = use_reranking if use_reranking is not None else self.reranking_system.is_available()
         
-        # If reranking is enabled, retrieve more documents first
+        # get more docs if reranking
         if should_rerank:
             initial_k = rerank_top_k if rerank_top_k is not None else (k * 2)
+            initial_k = max(1, initial_k)
         else:
             initial_k = k
         
-        # Perform initial retrieval
+        # do retrieval
         if mode == "semantic":
             results = self.embedding_store.search(query, k=initial_k)
-        
         elif mode == "bm25":
             self._initialize_hybrid_retriever()
             results = self.hybrid_retriever.search_bm25_only(query, k=initial_k)
-        
         elif mode == "hybrid":
             self._initialize_hybrid_retriever()
             results = self.hybrid_retriever.search(
@@ -325,15 +284,13 @@ class RetrievalSystem:
                 semantic_weight=semantic_weight,
                 bm25_weight=bm25_weight
             )
-        
         else:
             raise ValueError(f"Unknown search mode: {mode}. Use 'semantic', 'bm25', or 'hybrid'")
         
-        # Apply reranking if enabled
+        # rerank if enabled
         if should_rerank and results:
             results = self.reranking_system.rerank(query, results, top_k=k)
         
-        # Return top k results
         return results[:k]
     
     def update_chunks(self, chunks: List[Dict]):
