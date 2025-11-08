@@ -2,7 +2,7 @@
 
 ## Overview
 
-The Mini RAG 2 system now includes LLM-based question answering with automatic citation tracking. The system:
+The Mini RAG system now includes LLM-based question answering with automatic citation tracking. The system:
 
 1. **Retrieves** top-k relevant chunks using semantic/BM25/hybrid search
 2. **Generates** answers using an LLM (OpenAI GPT models)

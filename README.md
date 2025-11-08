@@ -1,4 +1,4 @@
-# Mini RAG 2 - Modular RAG System
+# Mini RAG - Modular RAG System
 
 A complete, modular Retrieval-Augmented Generation (RAG) system with document processing, semantic search, and LLM-powered question answering.
 
@@ -14,7 +14,7 @@ A complete, modular Retrieval-Augmented Generation (RAG) system with document pr
 ## Project Structure
 
 ```
-Mini_RAG_2/
+Mini_RAG/
 ├── src/
 │   ├── api/              # API layer (routes, models)
 │   ├── core/             # Core modules (ingestion, embeddings, retrieval, LLM)
@@ -34,7 +34,7 @@ Mini_RAG_2/
 
 ```bash
 git clone <repository-url>
-cd Mini_RAG_2
+cd Mini_RAG
 ```
 
 ### 2. Create Virtual Environment (Recommended)
@@ -68,8 +68,8 @@ OPENAI_API_KEY=your-openai-api-key-here
 docker-compose up --build
 
 # Or using Docker directly
-docker build -t mini-rag-2 .
-docker run -p 8000:8000 -e OPENAI_API_KEY=your-key mini-rag-2
+docker build -t mini-rag .
+docker run -p 8000:8000 -e OPENAI_API_KEY=your-key mini-rag
 ```
 
 See [DOCKER.md](DOCKER.md) for detailed Docker instructions.

@@ -21,7 +21,7 @@ app = create_app()
 async def startup_event():
     """Load vector store and pre-load embedding model on startup"""
     settings = get_settings()
-    print("Starting Mini RAG 2 API...")
+    print("Starting Mini RAG API...")
     
     # Pre-load embedding model in background to avoid first-request delay
     def preload_model():

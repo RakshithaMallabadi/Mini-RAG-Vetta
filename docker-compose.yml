@@ -3,7 +3,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: mini-rag-2-api
+    container_name: mini-rag-api
     ports:
       - "8000:8000"
     environment:

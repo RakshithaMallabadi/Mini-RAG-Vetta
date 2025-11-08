@@ -1,6 +1,6 @@
 # Docker Deployment Guide
 
-This guide explains how to run the Mini RAG 2 FastAPI application using Docker.
+This guide explains how to run the Mini RAG FastAPI application using Docker.
 
 ## Prerequisites
 
@@ -30,7 +30,7 @@ This guide explains how to run the Mini RAG 2 FastAPI application using Docker.
 
 1. **Build the image:**
    ```bash
-   docker build -t mini-rag-2:latest .
+   docker build -t mini-rag:latest .
    ```
 
 2. **Run the container:**
@@ -41,7 +41,7 @@ This guide explains how to run the Mini RAG 2 FastAPI application using Docker.
      -e OPENAI_API_KEY=your-api-key-here \
      -v $(pwd)/documents:/app/documents \
      -v $(pwd)/data:/app/data \
-     mini-rag-2:latest
+     mini-rag:latest
    ```
 
 3. **View logs:**
@@ -74,7 +74,7 @@ The Docker setup mounts two volumes:
 ```bash
 docker-compose build
 # or
-docker build -t mini-rag-2:latest .
+docker build -t mini-rag:latest .
 ```
 
 ### Start
@@ -211,7 +211,7 @@ Final image size: ~1.5GB (includes Python, dependencies, and models)
 
 ```bash
 # 1. Clone and navigate
-cd Mini_RAG_2
+cd Mini_RAG
 
 # 2. Set up environment
 echo "OPENAI_API_KEY=sk-..." > .env

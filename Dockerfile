@@ -1,4 +1,4 @@
-# Multi-stage build for Mini RAG 2 FastAPI application
+# Multi-stage build for Mini RAG FastAPI application
 
 # Stage 1: Build stage
 FROM python:3.11-slim as builder

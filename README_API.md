@@ -1,4 +1,4 @@
-# Mini RAG 2 - FastAPI Documentation
+# Mini RAG - FastAPI Documentation
 
 ## Quick Start
 
